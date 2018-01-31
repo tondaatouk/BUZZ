@@ -656,6 +656,8 @@ if config.dmg is not None:
             hdiutil_args.append("-" + key)
             if not value is True:
                 hdiutil_args.append(str(value))
+    	if verbose >= 3:
+      	  print "hdiutil_args ", hdiutil_args
 
         return run(hdiutil_args)
 
@@ -673,7 +675,7 @@ if config.dmg is not None:
 
     if fancy is None:
         try:
-            runHDIUtil("create", dmg_name, srcfolder="dist", format="UDBZ", volname=app_bundle_name, ov=True)
+            runHDIUtil("create", dmg_name, srcfolder="dist", format="UDBZ", fs="HFS+", volname=app_bundle_name, ov=True)
         except subprocess.CalledProcessError as e:
             sys.exit(e.returncode)
     else:
@@ -688,7 +690,7 @@ if config.dmg is not None:
         if verbose >= 3:
             print "Creating temp image for modification..."
         try:
-            runHDIUtil("create", dmg_name + ".temp", srcfolder="dist", format="UDRW", size=size, volname=app_bundle_name, ov=True)
+            runHDIUtil("create", dmg_name + ".temp", srcfolder="dist", format="UDRW", fs="HFS+", size=size, volname=app_bundle_name, ov=True)
         except subprocess.CalledProcessError as e:
             sys.exit(e.returncode)
 

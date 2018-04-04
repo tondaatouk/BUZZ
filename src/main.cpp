@@ -577,7 +577,7 @@ bool CTransaction::CheckTransaction() const
 
 static const int64_t TransactionFeeDivider_V1 = 200; // Giving out 0.005%????
 static const int64_t TransactionFeeDivider_V2 = 25*COIN; // 200 = 0.5%, so 200*2 = 400 = 1% 1%*25 = 25% 
-// static const int64_t TransactionFeeDividerSelf = 1*COIN; //divider for sending an input to output by same address to specify transaction fee percentage
+static const int64_t TransactionFeeDividerSelf = 1*COIN; //divider for sending an input to output by same address to specify transaction fee percentage
 
 /**
  * As a coin technically equals to 1*COIN (due to ~8 decimal places)
@@ -590,6 +590,7 @@ static const int64_t TransactionFeeDivider_V2 = 25*COIN; // 200 = 0.5%, so 200*2
 static const time_t PercentageFeeSendingBegin = 1400000000;
 static const time_t PercentageFeeRelayBegin = 1400000000;
 static const time_t ForkTiming = 1454284800;
+static const time_t ForkTiming_Unknown = 1454926540; // approx. at nHeight 50738
 // static const time_t Fork2 = 1505877351;
 static const time_t Fork3 = 1506157251;
 
@@ -612,10 +613,12 @@ static const time_t Fork3 = 1506157251;
 
 int64_t GetMinFee(const CTransaction& tx, unsigned int nBlockSize, enum GetMinFee_mode mode, unsigned int nBytes)
 {
+    int64_t txoutCombinedValue = 0;
 	int64_t TransactionFeeDivider;
-	time_t t=time(NULL);
-        if(t>ForkTiming)
-	{
+    // TA: Again this bs timing that will break every resync of the chain
+	// time_t t=time(NULL);
+    time_t t=tx.nTime;
+    if( t > ForkTiming ) {
 		TransactionFeeDivider = TransactionFeeDivider_V2;
 	} else {
         TransactionFeeDivider = TransactionFeeDivider_V1;
@@ -626,19 +629,23 @@ int64_t GetMinFee(const CTransaction& tx, unsigned int nBlockSize, enum GetMinFe
     int64_t nMinFee = (1 + (int64_t)nBytes / 1000) * nBaseFee;
 
     // To limit dust spam, add nBaseFee for each output less than DUST_SOFT_LIMIT
-    BOOST_FOREACH(const CTxOut& txout, tx.vout)
-        if (txout.nValue < 100)
+    BOOST_FOREACH(const CTxOut& txout, tx.vout) {
+        txoutCombinedValue += txout.nValue;
+        if (txout.nValue < 100) {
             nMinFee += nBaseFee;
-
+        }
+    }
+    
     if(t > PercentageFeeRelayBegin || (t > PercentageFeeSendingBegin && mode==GMF_SEND) )  
     {
         int64_t nNewMinFee = 0;
-    
+        int64_t prevNvalue = 0;
+        
         BOOST_FOREACH(const CTxOut& txout, tx.vout)
         {
             // do not add fees when sending to the same address
             // - this can be used for restructuring large single inputs
-            bool found=true; 
+            bool found=false;
 
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
             {
@@ -646,36 +653,52 @@ int64_t GetMinFee(const CTransaction& tx, unsigned int nBlockSize, enum GetMinFe
                 {        
                     found=true;
                 }
-                else
-                {
-                    found=false;
-                }
             }
-            if(!found)
-            {
-                // TODO: IMPROVE
-                if (t > Fork3){
-                    nNewMinFee = (txout.nValue / 100000) * 1;
-                } 
-                else {
-                    nNewMinFee = (txout.nValue / 100) * 25;
-                }
+            if(!found) {
                 
+                // TODO IMPROVE
+                if( (prevNvalue == 0) || (txout.nValue < prevNvalue) ) {
+                    
+                    prevNvalue = txout.nValue;
+                    if (t > Fork3) {
+                        nNewMinFee = (txout.nValue / 100000) * 1;
+                    } else if (t > ForkTiming) {
+                        nNewMinFee = (txout.nValue / 100) * 25;
+                    } else {
+                        nNewMinFee = txout.nValue / TransactionFeeDivider;
+                    }
+                }
 
+            } else {
+                
+                if (t > Fork3) {
+                    nNewMinFee = (txout.nValue / 100000) * 1;
+                } else if (t > ForkTiming) {
+                    nNewMinFee = txout.nValue / TransactionFeeDividerSelf;
+                } else {
+                    nNewMinFee = txout.nValue / TransactionFeeDividerSelf;
+                }
             }
-            if (t > Fork3){nNewMinFee = (txout.nValue / 100000) * 1;}
-            else {nNewMinFee = (txout.nValue / 100) * 25;}
-}
+        }
         nMinFee += nNewMinFee;
     }
 
-    if( nMinFee > COIN * ONE_BILLION ) // max 1 billion coins fee.
-    {
-        nMinFee = COIN * ONE_BILLION;
+    // TA: Cap maximum fee according the different forks
+    if ( t > Fork3) {
+        nMinFee = ( nMinFee <= COIN * ONE_BILLION ? nMinFee : COIN * ONE_BILLION );
+    } else if ( t > ForkTiming ) {
+        nMinFee = ( nMinFee <= COIN * 50000 ? nMinFee : COIN * 50000 );
+    } else {
+        nMinFee = ( nMinFee <= COIN * 500 ? nMinFee : COIN * 500 );
     }
-	
+    
     if (!MoneyRange(nMinFee)) {
         nMinFee = MAX_MONEY;
+    }
+
+    if (fDebug) {
+        LogPrintf("GetMinFee() : txoutValue=%d fee=%d\n",
+                  FormatMoney(txoutCombinedValue), FormatMoney(nMinFee));
     }
 
     return nMinFee;
@@ -1046,8 +1069,10 @@ static CBigNum GetProofOfStakeLimit(int nHeight)
         return bnProofOfStakeLimit;
 }
 
-// miner's coin base reward
+// TA dear prev dev, u know when this get initialized, right?
 time_t t=time(NULL);
+
+// miner's coin base reward
 int64_t GetProofOfWorkReward(int64_t nFees, CBlockIndex* pindex)
 {
     int64_t nSubsidy = 10 * COIN;
@@ -1082,7 +1107,8 @@ int64_t GetProofOfWorkReward(int64_t nFees, CBlockIndex* pindex)
     time_t SOME_RANDOM_LEGACY_FORK = 1505852400;
 
     // everything goes into this loop since september 19th, before BUZZ takeover by new devs.
-    if (t > SOME_RANDOM_LEGACY_FORK) {
+    // TA: and therefor breaking everything before?!? replaced the t value here
+    if (pindexBest->GetBlockTime() > SOME_RANDOM_LEGACY_FORK) {
         // if the subsidy amount plus the current supply goes over 20b
         // it is nice to give this reward still, just ensure that it does not exceed
         // 20 bil, so chop it.
@@ -1095,16 +1121,22 @@ int64_t GetProofOfWorkReward(int64_t nFees, CBlockIndex* pindex)
             return (TWENTY_BILLION - fCurrentSupply) * COIN;
         }
 
-        // this is the current catch all case, as we are 
+        // this is the current catch all case, as we are
         if (fCurrentSupply <= TWENTY_BILLION) {
-            LogPrint("creation", "GetProofOfWorkReward() : create=%s nSubsidy=%d\n",
-                FormatMoney(nSubsidy), nSubsidy);
-
+            // TA better log output
+            LogPrint("creation", "GetProofOfWorkReward() : height=%d create=%s nSubsidy=%d fee=%d time=%s\n",
+                     pindexBest->nHeight, FormatMoney(nSubsidy), nSubsidy, nFees, DateTimeStrFormat("%x %H:%M:%S", pindexBest->GetBlockTime()));
+            LogPrint("creation", "GetProofOfWorkReward() : height=%d SOME_RANDOM_LEGACY_FORK=%d t=%d pindexBestTime=%d\n",pindexBest->nHeight,SOME_RANDOM_LEGACY_FORK,t,pindexBest->GetBlockTime());
+            // TA changed back to original formula, because a complete resync will fail if not
             return nSubsidy;
         }
     }
+    nSubsidy += (nFees / 2);
+    LogPrint("creation", "GetProofOfWorkReward() : height=%d create=%s nSubsidy=%d fee=%d time=%s\n",
+             pindexBest->nHeight, FormatMoney(nSubsidy), nSubsidy, nFees, DateTimeStrFormat("%x %H:%M:%S", pindexBest->GetBlockTime()));
 
-    return nSubsidy + (nFees / 2);
+
+    return nSubsidy;
 }
 
 // stakers's coin stake reward
@@ -1537,8 +1569,9 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                 return DoS(100, error("ConnectInputs() : %s nTxFee < 0", GetHash().ToString()));
 
             // enforce transaction fees for every block
+            // TA: responsible for fail at blk time 1454927835
             int64_t nRequiredFee = GetMinFee(*this);
-            if (nTxFee < nRequiredFee && (pindexBest->nTime) > 1454926540)
+            if (nTxFee < nRequiredFee && nTime > ForkTiming_Unknown) //
                 return fBlock? DoS(100, error("ConnectInputs() : %s not paying required fee=%s, paid=%s", GetHash().ToString(), FormatMoney(nRequiredFee), FormatMoney(nTxFee))) : false;
 
             nFees += nTxFee;
@@ -1663,6 +1696,13 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     if (IsProofOfWork())
     {
         int64_t nReward = GetProofOfWorkReward(nFees, pindex);
+        
+        if (fDebug) {
+            LogPrintf("ConnectBlock() : coinbase reward (actual=%d vs calculated=%d)\n",
+                      vtx[0].GetValueOut(),
+                      nReward);
+        }
+
         // Check coinbase reward
         if (vtx[0].GetValueOut() > nReward)
             return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%d vs calculated=%d)",
@@ -1678,8 +1718,13 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
         int64_t nCalculatedStakeReward = GetProofOfStakeReward(nCoinAge, nFees, pindex);
 
+        if (fDebug) {
+            LogPrintf("ConnectBlock() : coinstake pays (actual=%d vs calculated=%d) fee=%d nHeight=%d \n",
+                      nStakeReward, nCalculatedStakeReward, nFees, pindex->nHeight);
+        }
+
         if (nStakeReward > nCalculatedStakeReward)
-            return DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward));
+            return DoS(100, error("ConnectBlock() : coinstake pays too much %d (actual=%d vs calculated=%d)", FormatMoney(nStakeReward - nCalculatedStakeReward), FormatMoney(nStakeReward), FormatMoney(nCalculatedStakeReward)));
     }
 
     // ppcoin: track money supply and mint amount info
@@ -1925,10 +1970,10 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
 
     uint256 nBestBlockTrust = pindexBest->nHeight != 0 ? (pindexBest->nChainTrust - pindexBest->pprev->nChainTrust) : pindexBest->nChainTrust;
 
-    LogPrintf("SetBestChain: new best=%s  height=%d  trust=%s  blocktrust=%d  date=%s\n",
+    LogPrintf("SetBestChain: new best=%s  height=%d  trust=%s  blocktrust=%d  ts=%d  date=%s\n",
       hashBestChain.ToString(), nBestHeight,
       CBigNum(nBestChainTrust).ToString(),
-      nBestBlockTrust.Get64(),
+      nBestBlockTrust.Get64(), pindexBest->GetBlockTime(),
       DateTimeStrFormat("%x %H:%M:%S", pindexBest->GetBlockTime()));
 
     // Check the version of the last 100 blocks to see if we need to upgrade:
@@ -2427,11 +2472,11 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 
     LogPrintf("ProcessBlock: ACCEPTED\n");
 
+    // TA: moved away, no more unattended transactions
 	// If turned on stake4charity, send a portion of stake reward to savings account address
-	if (pwalletMain->fStakeForCharity && (mapBlockIndex[hash]->nHeight >= Params().StabilitySoftFork() || TestNet()))
-		if (!pwalletMain->StakeForCharity())
-			LogPrint("s4c", "ERROR While trying to send portion of stake reward to savings account");
-
+//	if (pwalletMain->fStakeForCharity && (mapBlockIndex[hash]->nHeight >= Params().StabilitySoftFork() || TestNet()))
+//		if (!pwalletMain->StakeForCharity())
+//			LogPrint("s4c", "ERROR While trying to send portion of stake reward to savings account");
 
     // ppcoin: if responsible for sync-checkpoint send it
     if (pfrom && !CSyncCheckpoint::strMasterPrivKey.empty())

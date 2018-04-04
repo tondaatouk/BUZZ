@@ -1349,6 +1349,49 @@ Value backupwallet(const Array& params, bool fHelp)
     return Value::null;
 }
 
+Value autobackupwalletenabled(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+                            "autobackupwalletenabled <enabled=1|disabled=0>\n"
+                            "Safely copies wallet.dat to the backup destination.");
+    
+    bool fFlag = (params[0].get_int() != 0);
+    pwalletMain->fWalletAutoBackupEnabled = fFlag;
+ 
+    CWalletDB walletdb(pwalletMain->strWalletFile);
+    LOCK(pwalletMain->cs_wallet);
+    {
+        
+        Object result;
+        result.push_back(Pair("autobackupwalletenabled set to ", int(pwalletMain->fWalletAutoBackupEnabled)));
+        
+        if (pwalletMain->fFileBacked) {
+            walletdb.WriteWalletAutoBackupEnabled(pwalletMain->fWalletAutoBackupEnabled);
+            result.push_back(Pair("saved autobackup settings to wallet.dat ", "true"));
+        } else {
+            result.push_back(Pair("saved autobackup settings to wallet.dat ", "false"));
+        }
+        
+        return result;
+    }
+
+    return Value::null;
+}
+
+Value getautobackupwalletenabled(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+                            "getautobackupwalletenabled\n"
+                            "Returns the set autobackupwallet parameter\n"
+                            );
+    
+    Object result;
+    result.push_back(Pair("automatic backup enabled", int(pwalletMain->fWalletAutoBackupEnabled)));
+    return result;
+}
+
 
 Value keypoolrefill(const Array& params, bool fHelp)
 {

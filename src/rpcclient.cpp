@@ -153,6 +153,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "checkkernel", 0 },
     { "checkkernel", 1 },
     { "setdevelopmentdonation", 0 },
+    { "autobackupwalletenabled", 0 },
 };
 
 class CRPCConvertTable

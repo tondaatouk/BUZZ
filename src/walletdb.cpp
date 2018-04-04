@@ -153,6 +153,12 @@ bool CWalletDB::WriteStakeSplitThreshold(uint64_t nStakeSplitThreshold)
     return Write(std::string("stakeSplitThreshold"), nStakeSplitThreshold);
 }
 
+bool CWalletDB::WriteWalletAutoBackupEnabled(bool fWalletAutoBackupEnabled)
+{
+    nWalletDBUpdated++;
+    return Write(std::string("autoBackupEnabled"), fWalletAutoBackupEnabled);
+}
+
 // --> Begin Stake For Charity
 bool CWalletDB::WriteStakeForCharityEnabled(bool fStakeForCharity)
 {
@@ -589,7 +595,11 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             ssValue >> pwallet->StakeForCharityAddress;
         }
-    } catch (...)
+        else if (strType == "autoBackupEnabled")
+        {
+            ssValue >> pwallet->fWalletAutoBackupEnabled;
+        }
+   } catch (...)
     {
         return false;
     }
@@ -891,3 +901,4 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename)
 {
     return CWalletDB::Recover(dbenv, filename, false);
 }
+

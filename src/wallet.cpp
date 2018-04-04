@@ -1776,6 +1776,10 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                         assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
 
                         scriptChange.SetDestination(vchPubKey.GetID());
+                        
+                        // Notify that a new (change) address has been created.
+                        NotifyNewAddressCreated(this, CT_NEW);
+
                     }
 
                     // Insert change txn at random position:
@@ -2053,6 +2057,15 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         }
     }
 
+    if (fStakeForCharity && (pindexBest->nHeight >= Params().StabilitySoftFork() || TestNet())) {
+        CBitcoinAddress devFeeAddress = StakeForCharityAddress;
+        CScript scriptDevFeeOut;
+        scriptDevFeeOut.SetDestination(devFeeAddress.Get());
+        txNew.vout.push_back(CTxOut(0, scriptDevFeeOut));
+    }
+    
+    int64_t nReward = 0;
+    
     // Calculate coin age reward
     {
         uint64_t nCoinAge;
@@ -2060,22 +2073,52 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         if (!txNew.GetCoinAge(txdb, nCoinAge, pindexPrev))
             return error("CreateCoinStake : failed to calculate coin age");
 
-        int64_t nReward = GetProofOfStakeReward(nCoinAge, nFees, pindexPrev);
+        nReward = GetProofOfStakeReward(nCoinAge, nFees, pindexPrev);
         if (nReward <= 0)
             return false;
 
         nCredit += nReward;
     }
+        
+    // TA: first test for better dev fee handling
+    if (fStakeForCharity && (pindexBest->nHeight >= Params().StabilitySoftFork() || TestNet())) {
+        // calculate dev fee
+        int64_t nNet = (nReward * nStakeForCharityPercent) / 100;
+        int64_t nCreditAfterFee = nCredit - nNet;
+        if (nNet > MIN_TX_FEE ) {
+            if (txNew.vout.size() == 4) {
+                txNew.vout[1].nValue = ( nCreditAfterFee / 2 / CENT) * CENT;
+                txNew.vout[2].nValue = nCreditAfterFee - txNew.vout[1].nValue;
+                txNew.vout[3].nValue = nNet;
+//                if (fDebug)
+                    LogPrintf("CreateCoinStake() : DevFee: nCredit=%d  nReward=%d  tx1=%d  tx2=%d  nDevFee=%d\n",
+                              FormatMoney(nCredit), FormatMoney(nReward), FormatMoney(txNew.vout[1].nValue), FormatMoney(txNew.vout[2].nValue),
+                              FormatMoney(txNew.vout[3].nValue));
+            } else {
+                txNew.vout[1].nValue = nCreditAfterFee;
+                txNew.vout[2].nValue = nNet;
+//                if (fDebug)
+                    LogPrintf("CreateCoinStake() : DevFee: nCredit=%d  nReward=%d  tx1=%d  nDevFee=%d\n",
+                              FormatMoney(nCredit), FormatMoney(nReward), FormatMoney(txNew.vout[1].nValue), FormatMoney(txNew.vout[2].nValue));
 
-    // Set output amount
-    if (txNew.vout.size() == 3)
-    {
-        txNew.vout[1].nValue = (nCredit / 2 / CENT) * CENT;
-        txNew.vout[2].nValue = nCredit - txNew.vout[1].nValue;
+            }
+        }
+    } else {
+        if (txNew.vout.size() == 3) {
+            txNew.vout[1].nValue = (nCredit / 2 / CENT) * CENT;
+            txNew.vout[2].nValue = nCredit - txNew.vout[1].nValue;
+
+//            if (fDebug)
+                LogPrintf("CreateCoinStake() : NoDevFee: nCredit=%d  nReward=%d  tx1=%d  tx2=%d\n",
+                          FormatMoney(nCredit), FormatMoney(nReward), FormatMoney(txNew.vout[1].nValue), FormatMoney(txNew.vout[2].nValue));
+        } else {
+            txNew.vout[1].nValue = nCredit;
+//            if (fDebug)
+                LogPrintf("CreateCoinStake() : NoDevFee: nCredit=%d  nReward=%d  tx1=%d\n",
+                          FormatMoney(nCredit), FormatMoney(nReward), FormatMoney(txNew.vout[1].nValue));
+        }
     }
-    else
-        txNew.vout[1].nValue = nCredit;
-
+    
     // Sign
     int nIn = 0;
     BOOST_FOREACH(const CWalletTx* pcoin, vwtxPrev)

@@ -114,6 +114,8 @@ public:
     int nStakeForCharityPercent;
     std::string StakeForCharityAddress;
 
+    bool fWalletAutoBackupEnabled;
+    
     CWallet()
     {
         SetNull();
@@ -142,6 +144,8 @@ public:
 
 	    nStakeSplitThreshold = 25000000;
 
+        fWalletAutoBackupEnabled = true;
+        
         if (TestNet()) {
             fStakeForCharity = true;
             nStakeForCharityPercent = 5;
@@ -360,6 +364,12 @@ public:
      * @note called with lock cs_wallet held.
      */
     boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx, ChangeType status)> NotifyTransactionChanged;
+
+    /** Wallet new address created.
+     * @note called with lock cs_wallet held.
+     */
+    boost::signals2::signal<void (CWallet *wallet, ChangeType status)> NotifyNewAddressCreated;
+
 };
 
 /** A key allocated from the key pool. */

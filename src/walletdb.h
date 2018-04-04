@@ -123,6 +123,9 @@ public:
     bool WriteStakeForCharityEnabled(bool fStakeForCharity);
     bool WriteStakeForCharityPercentage(uint64_t nStakeForCharityPercent);
     bool WriteStakeForCharityAddress(std::string StakeForCharityAddress);
+
+    bool WriteWalletAutoBackupEnabled(bool fWalletAutoBackupEnabled);
+    
 };
 
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);

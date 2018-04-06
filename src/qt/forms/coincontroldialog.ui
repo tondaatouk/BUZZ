@@ -24,6 +24,12 @@
      </property>
      <item>
       <layout class="QFormLayout" name="formLayoutCoinControl1">
+       <property name="labelAlignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="formAlignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       </property>
        <property name="horizontalSpacing">
         <number>10</number>
        </property>
@@ -51,17 +57,20 @@
          <property name="font">
           <font>
            <family>Monospace</family>
-           <pointsize>10</pointsize>
+           <pointsize>13</pointsize>
           </font>
          </property>
          <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+          <cursorShape>ArrowCursor</cursorShape>
          </property>
          <property name="contextMenuPolicy">
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
           <string notr="true">0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -83,17 +92,20 @@
          <property name="font">
           <font>
            <family>Monospace</family>
-           <pointsize>10</pointsize>
+           <pointsize>13</pointsize>
           </font>
          </property>
          <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+          <cursorShape>ArrowCursor</cursorShape>
          </property>
          <property name="contextMenuPolicy">
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
           <string notr="true">0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -104,6 +116,9 @@
      </item>
      <item>
       <layout class="QFormLayout" name="formLayoutCoinControl2">
+       <property name="formAlignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       </property>
        <property name="horizontalSpacing">
         <number>10</number>
        </property>
@@ -131,17 +146,20 @@
          <property name="font">
           <font>
            <family>Monospace</family>
-           <pointsize>10</pointsize>
+           <pointsize>13</pointsize>
           </font>
          </property>
          <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+          <cursorShape>ArrowCursor</cursorShape>
          </property>
          <property name="contextMenuPolicy">
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
           <string notr="true">0.00 BC</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -163,17 +181,20 @@
          <property name="font">
           <font>
            <family>Monospace</family>
-           <pointsize>10</pointsize>
+           <pointsize>13</pointsize>
           </font>
          </property>
          <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+          <cursorShape>ArrowCursor</cursorShape>
          </property>
          <property name="contextMenuPolicy">
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
           <string/>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -184,6 +205,9 @@
      </item>
      <item>
       <layout class="QFormLayout" name="formLayoutCoinControl3">
+       <property name="formAlignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       </property>
        <property name="horizontalSpacing">
         <number>10</number>
        </property>
@@ -211,17 +235,20 @@
          <property name="font">
           <font>
            <family>Monospace</family>
-           <pointsize>10</pointsize>
+           <pointsize>13</pointsize>
           </font>
          </property>
          <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+          <cursorShape>ArrowCursor</cursorShape>
          </property>
          <property name="contextMenuPolicy">
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
           <string notr="true">0.00 BC</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -249,17 +276,20 @@
          <property name="font">
           <font>
            <family>Monospace</family>
-           <pointsize>10</pointsize>
+           <pointsize>13</pointsize>
           </font>
          </property>
          <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+          <cursorShape>ArrowCursor</cursorShape>
          </property>
          <property name="contextMenuPolicy">
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
           <string notr="true">no</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -270,6 +300,9 @@
      </item>
      <item>
       <layout class="QFormLayout" name="formLayoutCoinControl4">
+       <property name="formAlignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       </property>
        <property name="horizontalSpacing">
         <number>10</number>
        </property>
@@ -297,17 +330,20 @@
          <property name="font">
           <font>
            <family>Monospace</family>
-           <pointsize>10</pointsize>
+           <pointsize>13</pointsize>
           </font>
          </property>
          <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+          <cursorShape>ArrowCursor</cursorShape>
          </property>
          <property name="contextMenuPolicy">
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
           <string notr="true">0.00 BC</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -335,17 +371,20 @@
          <property name="font">
           <font>
            <family>Monospace</family>
-           <pointsize>10</pointsize>
+           <pointsize>13</pointsize>
           </font>
          </property>
          <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+          <cursorShape>ArrowCursor</cursorShape>
          </property>
          <property name="contextMenuPolicy">
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
           <string notr="true">0.00 BC</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -379,7 +418,7 @@
         <height>41</height>
        </rect>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayoutPanel" stretch="0,0,0,0,0">
+      <layout class="QHBoxLayout" name="horizontalLayoutPanel" stretch="0,0,0,0">
        <property name="spacing">
         <number>14</number>
        </property>

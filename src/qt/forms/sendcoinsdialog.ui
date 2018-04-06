@@ -173,7 +173,16 @@
            <string notr="true"/>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayoutCoinControl5">
-           <property name="margin">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
             <number>0</number>
            </property>
            <item>
@@ -189,6 +198,9 @@
              </property>
              <item>
               <layout class="QFormLayout" name="formLayoutCoinControl1">
+               <property name="formAlignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+               </property>
                <property name="horizontalSpacing">
                 <number>10</number>
                </property>
@@ -222,7 +234,7 @@
                  <property name="font">
                   <font>
                    <family>Monospace</family>
-                   <pointsize>10</pointsize>
+                   <pointsize>13</pointsize>
                   </font>
                  </property>
                  <property name="cursor">
@@ -257,7 +269,7 @@
                  <property name="font">
                   <font>
                    <family>Monospace</family>
-                   <pointsize>10</pointsize>
+                   <pointsize>13</pointsize>
                   </font>
                  </property>
                  <property name="cursor">
@@ -278,6 +290,9 @@
              </item>
              <item>
               <layout class="QFormLayout" name="formLayoutCoinControl2">
+               <property name="formAlignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+               </property>
                <property name="horizontalSpacing">
                 <number>10</number>
                </property>
@@ -311,7 +326,7 @@
                  <property name="font">
                   <font>
                    <family>Monospace</family>
-                   <pointsize>10</pointsize>
+                   <pointsize>13</pointsize>
                   </font>
                  </property>
                  <property name="cursor">
@@ -343,7 +358,7 @@
                  <property name="font">
                   <font>
                    <family>Monospace</family>
-                   <pointsize>10</pointsize>
+                   <pointsize>13</pointsize>
                   </font>
                  </property>
                  <property name="cursor">
@@ -364,6 +379,9 @@
              </item>
              <item>
               <layout class="QFormLayout" name="formLayoutCoinControl3">
+               <property name="formAlignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+               </property>
                <property name="horizontalSpacing">
                 <number>10</number>
                </property>
@@ -397,7 +415,7 @@
                  <property name="font">
                   <font>
                    <family>Monospace</family>
-                   <pointsize>10</pointsize>
+                   <pointsize>13</pointsize>
                   </font>
                  </property>
                  <property name="cursor">
@@ -429,7 +447,7 @@
                  <property name="font">
                   <font>
                    <family>Monospace</family>
-                   <pointsize>10</pointsize>
+                   <pointsize>13</pointsize>
                   </font>
                  </property>
                  <property name="cursor">
@@ -450,6 +468,9 @@
              </item>
              <item>
               <layout class="QFormLayout" name="formLayoutCoinControl4">
+               <property name="formAlignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+               </property>
                <property name="horizontalSpacing">
                 <number>10</number>
                </property>
@@ -483,7 +504,7 @@
                  <property name="font">
                   <font>
                    <family>Monospace</family>
-                   <pointsize>10</pointsize>
+                   <pointsize>13</pointsize>
                   </font>
                  </property>
                  <property name="cursor">
@@ -506,7 +527,7 @@
                   <string notr="true">font-weight:bold;</string>
                  </property>
                  <property name="text">
-                  <string>Change</string>
+                  <string>Change:</string>
                  </property>
                 </widget>
                </item>
@@ -515,7 +536,7 @@
                  <property name="font">
                   <font>
                    <family>Monospace</family>
-                   <pointsize>10</pointsize>
+                   <pointsize>13</pointsize>
                   </font>
                  </property>
                  <property name="cursor">
@@ -625,12 +646,21 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>830</width>
-        <height>165</height>
+        <width>824</width>
+        <height>141</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
-       <property name="margin">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
         <number>0</number>
        </property>
        <item>

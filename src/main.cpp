@@ -591,7 +591,9 @@ static const time_t PercentageFeeSendingBegin = 1400000000;
 static const time_t PercentageFeeRelayBegin = 1400000000;
 static const time_t ForkTiming = 1454284800;
 static const time_t ForkTiming_Unknown = 1454926540; // approx. at nHeight 50738
-// static const time_t Fork2 = 1505877351;
+static const time_t ForkTiming_Unknown1 = 1505853538; // nHeight 739873
+static const time_t SOME_RANDOM_LEGACY_FORK = 1505852400; // nHeight 739857 Tuesday, 19 September 2017 20:20:00
+static const time_t Fork2 = 1505877351;
 static const time_t Fork3 = 1506157251;
 
 //int64_t GetMinSendFee(const int64_t nValue)
@@ -1070,7 +1072,7 @@ static CBigNum GetProofOfStakeLimit(int nHeight)
 }
 
 // TA dear prev dev, u know when this get initialized, right?
-time_t t=time(NULL);
+//time_t t=time(NULL);
 
 // miner's coin base reward
 int64_t GetProofOfWorkReward(int64_t nFees, CBlockIndex* pindex)
@@ -1092,6 +1094,9 @@ int64_t GetProofOfWorkReward(int64_t nFees, CBlockIndex* pindex)
         if(pindexBest->nHeight == 1) {
             // original 100,000 legacy BUZZ premine.
             nSubsidy = 100000 * COIN;
+        } else if (pindexBest->nHeight == 739235) {
+            //
+            nSubsidy = 27463 * COIN;
         }
     }
 
@@ -1104,7 +1109,7 @@ int64_t GetProofOfWorkReward(int64_t nFees, CBlockIndex* pindex)
     }
 
     // Tuesday, 19 September 2017 20:20:00
-    time_t SOME_RANDOM_LEGACY_FORK = 1505852400;
+    // time_t SOME_RANDOM_LEGACY_FORK = 1505852400;
 
     // everything goes into this loop since september 19th, before BUZZ takeover by new devs.
     // TA: and therefor breaking everything before?!? replaced the t value here
@@ -1126,7 +1131,7 @@ int64_t GetProofOfWorkReward(int64_t nFees, CBlockIndex* pindex)
             // TA better log output
             LogPrint("creation", "GetProofOfWorkReward() : height=%d create=%s nSubsidy=%d fee=%d time=%s\n",
                      pindexBest->nHeight, FormatMoney(nSubsidy), nSubsidy, nFees, DateTimeStrFormat("%x %H:%M:%S", pindexBest->GetBlockTime()));
-            LogPrint("creation", "GetProofOfWorkReward() : height=%d SOME_RANDOM_LEGACY_FORK=%d t=%d pindexBestTime=%d\n",pindexBest->nHeight,SOME_RANDOM_LEGACY_FORK,t,pindexBest->GetBlockTime());
+            LogPrint("creation", "GetProofOfWorkReward() : height=%d SOME_RANDOM_LEGACY_FORK=%d pindexBestTime=%d\n",pindexBest->nHeight,SOME_RANDOM_LEGACY_FORK,pindexBest->GetBlockTime());
             // TA changed back to original formula, because a complete resync will fail if not
             return nSubsidy;
         }
@@ -2470,7 +2475,8 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
-    LogPrintf("ProcessBlock: ACCEPTED\n");
+    if (fDebug)
+        LogPrintf("ProcessBlock: ACCEPTED\n");
 
     // TA: moved away, no more unattended transactions
 	// If turned on stake4charity, send a portion of stake reward to savings account address

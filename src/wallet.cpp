@@ -2079,59 +2079,80 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
 
         nCredit += nReward;
     }
+    
+    int64_t nMinFee = 0;
+    while (true)
+    {
+        nCredit -= nMinFee;
         
-    // TA: first test for better dev fee handling
-    if (fStakeForCharity && (pindexBest->nHeight >= Params().StabilitySoftFork() || TestNet())) {
-        // calculate dev fee
-        int64_t nNet = (nReward * nStakeForCharityPercent) / 100;
-        int64_t nCreditAfterFee = nCredit - nNet;
-        if (nNet > MIN_TX_FEE ) {
-            if (txNew.vout.size() == 4) {
-                txNew.vout[1].nValue = ( nCreditAfterFee / 2 / CENT) * CENT;
-                txNew.vout[2].nValue = nCreditAfterFee - txNew.vout[1].nValue;
-                txNew.vout[3].nValue = nNet;
-//                if (fDebug)
-                    LogPrintf("CreateCoinStake() : DevFee: nCredit=%d  nReward=%d  tx1=%d  tx2=%d  nDevFee=%d\n",
-                              FormatMoney(nCredit), FormatMoney(nReward), FormatMoney(txNew.vout[1].nValue), FormatMoney(txNew.vout[2].nValue),
-                              FormatMoney(txNew.vout[3].nValue));
-            } else {
-                txNew.vout[1].nValue = nCreditAfterFee;
-                txNew.vout[2].nValue = nNet;
-//                if (fDebug)
-                    LogPrintf("CreateCoinStake() : DevFee: nCredit=%d  nReward=%d  tx1=%d  nDevFee=%d\n",
-                              FormatMoney(nCredit), FormatMoney(nReward), FormatMoney(txNew.vout[1].nValue), FormatMoney(txNew.vout[2].nValue));
+        // TA: first test for better dev fee handling
+        if (fStakeForCharity && (pindexBest->nHeight >= Params().StabilitySoftFork() || TestNet())) {
+            // calculate dev fee
+            int64_t nNet = (nReward * nStakeForCharityPercent) / 100;
+            int64_t nCreditAfterFee = nCredit - nNet;
+            if (nNet > MIN_TX_FEE ) {
+                if (txNew.vout.size() == 4) {
+                    txNew.vout[1].nValue = ( nCreditAfterFee / 2 / CENT) * CENT;
+                    txNew.vout[2].nValue = nCreditAfterFee - txNew.vout[1].nValue;
+                    txNew.vout[3].nValue = nNet;
+    //                if (fDebug)
+                        LogPrintf("CreateCoinStake() : DevFee: nCredit=%d  nReward=%d  tx1=%d  tx2=%d  nDevFee=%d\n",
+                                  FormatMoney(nCredit), FormatMoney(nReward), FormatMoney(txNew.vout[1].nValue), FormatMoney(txNew.vout[2].nValue),
+                                  FormatMoney(txNew.vout[3].nValue));
+                } else {
+                    txNew.vout[1].nValue = nCreditAfterFee;
+                    txNew.vout[2].nValue = nNet;
+    //                if (fDebug)
+                        LogPrintf("CreateCoinStake() : DevFee: nCredit=%d  nReward=%d  tx1=%d  nDevFee=%d\n",
+                                  FormatMoney(nCredit), FormatMoney(nReward), FormatMoney(txNew.vout[1].nValue), FormatMoney(txNew.vout[2].nValue));
 
+                }
+            }
+        } else {
+            if (txNew.vout.size() == 3) {
+                txNew.vout[1].nValue = (nCredit / 2 / CENT) * CENT;
+                txNew.vout[2].nValue = nCredit - txNew.vout[1].nValue;
+
+    //            if (fDebug)
+                    LogPrintf("CreateCoinStake() : NoDevFee: nCredit=%d  nReward=%d  tx1=%d  tx2=%d\n",
+                              FormatMoney(nCredit), FormatMoney(nReward), FormatMoney(txNew.vout[1].nValue), FormatMoney(txNew.vout[2].nValue));
+            } else {
+                txNew.vout[1].nValue = nCredit;
+    //            if (fDebug)
+                    LogPrintf("CreateCoinStake() : NoDevFee: nCredit=%d  nReward=%d  tx1=%d\n",
+                              FormatMoney(nCredit), FormatMoney(nReward), FormatMoney(txNew.vout[1].nValue));
             }
         }
-    } else {
-        if (txNew.vout.size() == 3) {
-            txNew.vout[1].nValue = (nCredit / 2 / CENT) * CENT;
-            txNew.vout[2].nValue = nCredit - txNew.vout[1].nValue;
+        
+        // Sign
+        int nIn = 0;
+        BOOST_FOREACH(const CWalletTx* pcoin, vwtxPrev)
+        {
+            if (!SignSignature(*this, *pcoin, txNew, nIn++))
+                return error("CreateCoinStake : failed to sign coinstake");
+        }
 
-//            if (fDebug)
-                LogPrintf("CreateCoinStake() : NoDevFee: nCredit=%d  nReward=%d  tx1=%d  tx2=%d\n",
-                          FormatMoney(nCredit), FormatMoney(nReward), FormatMoney(txNew.vout[1].nValue), FormatMoney(txNew.vout[2].nValue));
-        } else {
-            txNew.vout[1].nValue = nCredit;
-//            if (fDebug)
-                LogPrintf("CreateCoinStake() : NoDevFee: nCredit=%d  nReward=%d  tx1=%d\n",
-                          FormatMoney(nCredit), FormatMoney(nReward), FormatMoney(txNew.vout[1].nValue));
+        // Limit size
+        unsigned int nBytes = ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
+        if (nBytes >= MAX_BLOCK_SIZE_GEN/5)
+            return error("CreateCoinStake : exceeded coinstake size limit");
+
+        // Check enough fee is paid
+        if (nMinFee < GetMinFee(txNew) - MIN_TX_FEE)
+        {
+            nMinFee = GetMinFee(txNew) - MIN_TX_FEE;
+            continue; // try signing again
+        }
+        else
+        {
+            if (fDebug)
+                LogPrintf("CreateCoinStake() : fee for coinstake %d\n",
+                          FormatMoney(nMinFee));
+
+                printf("CreateCoinStake : fee for coinstake %s\n", FormatMoney(nMinFee).c_str());
+            break;
         }
     }
-    
-    // Sign
-    int nIn = 0;
-    BOOST_FOREACH(const CWalletTx* pcoin, vwtxPrev)
-    {
-        if (!SignSignature(*this, *pcoin, txNew, nIn++))
-            return error("CreateCoinStake : failed to sign coinstake");
-    }
-
-    // Limit size
-    unsigned int nBytes = ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
-    if (nBytes >= MAX_BLOCK_SIZE_GEN/5)
-        return error("CreateCoinStake : exceeded coinstake size limit");
-
     // Successfully generated coinstake
     return true;
 }

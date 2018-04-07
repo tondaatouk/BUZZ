@@ -1102,6 +1102,11 @@ int64_t GetProofOfWorkReward(int64_t nFees, CBlockIndex* pindex)
             // hack for this specific block
             nSubsidy = 79.06578875 * COIN;
             LogPrintf("GetProofOfWorkReward(): block %d custom nSubsidy=%d", pindexBest->nHeight, nSubsidy);
+        } else if (pindexBest->nHeight == 739873) {
+            // hack for this specific block
+            nSubsidy = 10.49777750 * COIN;
+            LogPrintf("GetProofOfWorkReward(): block %d custom nSubsidy=%d", pindexBest->nHeight, nSubsidy);
+
         }
         
     }

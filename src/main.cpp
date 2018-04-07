@@ -1095,9 +1095,15 @@ int64_t GetProofOfWorkReward(int64_t nFees, CBlockIndex* pindex)
             // original 100,000 legacy BUZZ premine.
             nSubsidy = 100000 * COIN;
         } else if (pindexBest->nHeight == 739235) {
-            //
-            nSubsidy = 27463 * COIN;
+            // hack for this specific block
+            nSubsidy = 27463.81544900 * COIN;
+            LogPrintf("GetProofOfWorkReward(): block %d custom nSubsidy=%d", pindexBest->nHeight, nSubsidy);
+        } else if (pindexBest->nHeight == 739857) {
+            // hack for this specific block
+            nSubsidy = 79.06578875 * COIN;
+            LogPrintf("GetProofOfWorkReward(): block %d custom nSubsidy=%d", pindexBest->nHeight, nSubsidy);
         }
+        
     }
 
     // if we are equal to or over 20b, we return no subsidy.
@@ -1119,7 +1125,7 @@ int64_t GetProofOfWorkReward(int64_t nFees, CBlockIndex* pindex)
         // 20 bil, so chop it.
         if (MINING_REWARD + fCurrentSupply >= TWENTY_BILLION) {
             if (fDebug) {
-                LogPrintf("GetProofOfWorkReward(): nSubsidy exceeds max supply, setting to %.8f.",
+                LogPrint("creation", "GetProofOfWorkReward(): nSubsidy exceeds max supply, setting to %.8f.",
                     (TWENTY_BILLION - fCurrentSupply) * COIN);
             }
 
@@ -1702,17 +1708,16 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     {
         int64_t nReward = GetProofOfWorkReward(nFees, pindex);
         
-        if (fDebug) {
-            LogPrintf("ConnectBlock() : coinbase reward (actual=%d vs calculated=%d)\n",
+//        if (fDebug)
+            LogPrintf("ConnectBlock() : coinbase reward (actual=%d vs calculated=%d)  nHeight=%d\n",
                       vtx[0].GetValueOut(),
-                      nReward);
-        }
+                      nReward, pindex->nHeight);
 
         // Check coinbase reward
         if (vtx[0].GetValueOut() > nReward)
-            return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%d vs calculated=%d)",
+            return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%d vs calculated=%d)   nHeight=%d",
                    vtx[0].GetValueOut(),
-                   nReward));
+                   nReward, pindex->nHeight));
     }
     if (IsProofOfStake())
     {
